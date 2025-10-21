@@ -207,15 +207,26 @@ class MondayItemDuplicator:
             raise Exception(f"Item '{source_item_name}' not found in board {source_board_id}")
         
         print(f"✅ Found item (ID: {source_item['id']}) in group: {source_item['group']['title']}")
-        
-        return self.duplicate_item_from_data(source_item, dest_board_id, dest_group_id, column_mapping)
+
+        return self.duplicate_item_from_data(
+            source_item,
+            dest_board_id,
+            dest_group_id,
+            column_mapping,
+            column_names={},
+            source_board_name="Source",
+            dest_board_name="Destination"
+        )
     
     def duplicate_item_from_data(
         self,
         source_item: Dict,
         dest_board_id: int,
         dest_group_id: str,
-        column_mapping: Dict[str, str]
+        column_mapping: Dict[str, str],
+        column_names: Dict[str, str] = None,
+        source_board_name: str = "Source",
+        dest_board_name: str = "Destination"
     ) -> Dict:
         """
         Duplicate an item using existing item data
@@ -256,24 +267,33 @@ class MondayItemDuplicator:
         mapped_values = {}
         mapped_summary = []
         unmapped_summary = []
-        
+
+        # Use column names if provided, otherwise use IDs
+        if column_names is None:
+            column_names = {}
+
         for source_col_id, dest_col_id in column_mapping.items():
             if source_col_id in source_columns:
                 col = source_columns[source_col_id]
-                
+
                 # Skip empty values
                 if not col["value"] or col["value"] == "null":
                     continue
-                
+
+                # Get friendly names for display
+                source_name = column_names.get(source_col_id, source_col_id)
+                dest_name = column_names.get(dest_col_id, dest_col_id)
+                mapping_display = f"{source_name} ({source_board_name}) → {dest_name} ({dest_board_name})"
+
                 try:
                     # Parse the value
                     value_data = json.loads(col["value"])
-                    
+
                     # Handle different column types
                     if col["type"] == "text":
                         mapped_values[dest_col_id] = col["text"]
-                        mapped_summary.append(f"✅ {source_col_id} → {dest_col_id}: '{col['text']}'")
-                    
+                        mapped_summary.append(f"✅ {mapping_display}: '{col['text']}'")
+
                     elif col["type"] == "link":
                         # Set URL as both the link and display text
                         url = value_data.get("url", "")
@@ -281,38 +301,95 @@ class MondayItemDuplicator:
                             "url": url,
                             "text": url
                         }
-                        mapped_summary.append(f"✅ {source_col_id} → {dest_col_id}: {url}")
-                    
+                        mapped_summary.append(f"✅ {mapping_display}: {url}")
+
                     elif col["type"] == "board-relation":
                         # Extract linked item IDs
                         linked_items = value_data.get("linkedPulseIds", [])
                         if linked_items:
                             item_ids = [int(item["linkedPulseId"]) for item in linked_items]
                             mapped_values[dest_col_id] = {"item_ids": item_ids}
-                            mapped_summary.append(f"✅ {source_col_id} → {dest_col_id}: {len(item_ids)} linked item(s)")
-                    
+                            mapped_summary.append(f"✅ {mapping_display}: {len(item_ids)} linked item(s)")
+
                     else:
                         # For other types, try to use the raw value
                         mapped_values[dest_col_id] = value_data
-                        mapped_summary.append(f"✅ {source_col_id} → {dest_col_id}: {col['text']}")
-                
+                        mapped_summary.append(f"✅ {mapping_display}: {col['text']}")
+
                 except json.JSONDecodeError:
                     # If value isn't JSON, use text representation
                     mapped_values[dest_col_id] = col["text"]
-                    mapped_summary.append(f"✅ {source_col_id} → {dest_col_id}: '{col['text']}'")
+                    mapped_summary.append(f"✅ {mapping_display}: '{col['text']}'")
         
         # Print preview summary and get confirmation
-        print("=" * 70)
         action_text = "UPDATE" if is_update else "CREATE"
+
+        # Build table data first to calculate column widths
+        table_rows = []
+
+        # Name row (always mapped)
+        table_rows.append(("Name", "Name", source_item['name']))
+
+        # Other columns
+        for source_col_id, dest_col_id in column_mapping.items():
+            if source_col_id in source_columns:
+                col = source_columns[source_col_id]
+
+                # Skip empty values
+                if not col["value"] or col["value"] == "null":
+                    continue
+
+                # Get friendly names
+                source_name = column_names.get(source_col_id, source_col_id)
+                dest_name = column_names.get(dest_col_id, dest_col_id)
+
+                # Get display value
+                try:
+                    value_data = json.loads(col["value"])
+
+                    if col["type"] == "link":
+                        display_value = value_data.get("url", "")
+                    elif col["type"] == "board-relation":
+                        linked_items = value_data.get("linkedPulseIds", [])
+                        display_value = f"{len(linked_items)} linked item(s)" if linked_items else ""
+                    else:
+                        display_value = col["text"] or ""
+                except:
+                    display_value = col["text"] or ""
+
+                table_rows.append((source_name, dest_name, display_value))
+
+        # Calculate maximum widths for each column
+        max_source = max(len(row[0]) for row in table_rows) if table_rows else 20
+        max_dest = max(len(row[1]) for row in table_rows) if table_rows else 20
+        max_value = max(len(str(row[2])) for row in table_rows) if table_rows else 20
+
+        # Create header text with board names
+        source_header = f"Source Column: ({source_board_name})"
+        dest_header = f"Destination Column: ({dest_board_name})"
+
+        # Add some padding and account for header text
+        max_source = max(max_source, len(source_header))
+        max_dest = max(max_dest, len(dest_header))
+        max_value = max(max_value, len("Value"))
+
+        total_width = max_source + max_dest + max_value + 6  # 6 for separators
+
+        print("=" * total_width)
         print(f"📋 PREVIEW - Ready to {action_text}")
-        print("=" * 70)
+        print("=" * total_width)
 
-        print(f"\n✅ Will Map ({len(mapped_summary)} columns):")
-        print(f"  • Name: '{source_item['name']}'")
-        for item in mapped_summary:
-            print(f"  • {item}")
+        print(f"\n✅ Will Map ({len(table_rows)} columns):\n")
 
-        print("\n" + "=" * 70)
+        # Print table header
+        print(f"{source_header:<{max_source}} | {dest_header:<{max_dest}} | Value")
+        print(f"{'-' * max_source} | {'-' * max_dest} | {'-' * max_value}")
+
+        # Print table rows
+        for source_col, dest_col, value in table_rows:
+            print(f"{source_col:<{max_source}} | {dest_col:<{max_dest}} | {value}")
+
+        print("\n" + "=" * total_width)
 
         # Get user confirmation
         print(f"\n⚠️  Ready to {action_text} this item in the destination board.")
@@ -376,7 +453,7 @@ class MondayItemDuplicator:
 
 def main():
     """Main function to run the duplicator"""
-    
+
     # ============================================================================
     # Configuration - Load from .env file
     # ============================================================================
@@ -415,6 +492,18 @@ def main():
         print("❌ Error: COLUMN_MAPPING in .env file is not valid JSON!")
         print("   Expected format: COLUMN_MAPPING={\"source_col_id\": \"dest_col_id\"}")
         sys.exit(1)
+
+    # ============================================================================
+    # Column Display Names (Optional - for better visualization)
+    # ============================================================================
+    # Maps column IDs to friendly display names for the preview
+    # Format in .env: COLUMN_NAMES={"col_id": "Display Name", ...}
+
+    column_names_str = os.getenv("COLUMN_NAMES", "{}")
+    try:
+        COLUMN_NAMES = json.loads(column_names_str) if column_names_str else {}
+    except json.JSONDecodeError:
+        COLUMN_NAMES = {}
     
     # ============================================================================
     # Validate Configuration
@@ -516,7 +605,10 @@ def main():
                         source_item=item,
                         dest_board_id=DEST_BOARD_ID,
                         dest_group_id=DEST_GROUP_ID,
-                        column_mapping=COLUMN_MAPPING
+                        column_mapping=COLUMN_MAPPING,
+                        column_names=COLUMN_NAMES,
+                        source_board_name=SOURCE_BOARD_NAME,
+                        dest_board_name=DEST_BOARD_NAME
                     )
                     results.append(result)
 
