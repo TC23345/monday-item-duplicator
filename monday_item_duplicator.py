@@ -350,9 +350,10 @@ class MondayItemDuplicator:
                             mapped_values[dest_col_id] = {"item_ids": item_ids}
                             mapped_summary.append(f"✅ {mapping_display}: {len(item_ids)} linked item(s)")
 
-                    elif col["type"] == "color":
+                    elif col["type"] in ["color", "status"]:
                         # Status/color column - use label format
                         # Monday.com expects {"label": "Label Name"}
+                        # Note: API reports these as "status" type, not "color"
                         mapped_values[dest_col_id] = {"label": col["text"]}
                         mapped_summary.append(f"✅ {mapping_display}: {col['text']}")
 
