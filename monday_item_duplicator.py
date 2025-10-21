@@ -343,34 +343,12 @@ class MondayItemDuplicator:
                         mapped_summary.append(f"✅ {mapping_display}: {url}")
 
                     elif col["type"] == "board-relation":
-                        # First, try to extract existing linked item IDs from source
+                        # Extract linked item IDs from source and copy to destination
                         linked_items = value_data.get("linkedPulseIds", [])
-
                         if linked_items:
-                            # Source has board relation values - copy them directly
                             item_ids = [int(item["linkedPulseId"]) for item in linked_items]
                             mapped_values[dest_col_id] = {"item_ids": item_ids}
                             mapped_summary.append(f"✅ {mapping_display}: {len(item_ids)} linked item(s)")
-                        elif pillar_board_id and pillar_group_id and pillar_search_columns:
-                            # Source is empty - do intelligent matching
-                            # Build search terms from specified columns
-                            search_terms = []
-                            for search_col_id in pillar_search_columns:
-                                if search_col_id in source_columns:
-                                    search_text = source_columns[search_col_id].get("text", "")
-                                    if search_text:
-                                        search_terms.append(search_text)
-
-                            # Find matching items in the pillar board
-                            print(f"\n   🔍 Searching for matching Client Pillars...")
-                            print(f"   Search terms: {search_terms}")
-                            matching_ids = self.find_matching_pillar_items(search_terms, pillar_board_id, pillar_group_id)
-
-                            if matching_ids:
-                                mapped_values[dest_col_id] = {"item_ids": matching_ids}
-                                mapped_summary.append(f"✅ {mapping_display}: {len(matching_ids)} auto-matched pillar(s)")
-                            else:
-                                print(f"   ⚠️  No matching pillars found for search terms: {search_terms}")
 
                     elif col["type"] == "color":
                         # Status/color column - use label format
