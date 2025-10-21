@@ -66,7 +66,7 @@ COLUMN_MAPPING={
 }
 ```
 
-### 3. Adding Friendly Column Names (Optional)
+### 3. Adding Display Column Names
 
 The `COLUMN_NAMES` makes the preview output more readable by showing friendly names instead of column IDs.
 
@@ -74,8 +74,6 @@ The `COLUMN_NAMES` makes the preview output more readable by showing friendly na
 ```bash
 COLUMN_NAMES={"col_id": "Display Name", "another_col": "Another Name"}
 ```
-
-**How to Add Friendly Names:**
 
 For each column mapping, add TWO entries (source and destination):
 ```bash
@@ -103,75 +101,7 @@ Different Monday.com column types require different data formats:
 
 **Note:** The tool automatically handles format conversion. You only need to map the column IDs.
 
-## Step-by-Step: Adding a New Column
-
-### Example: Adding "SEO Score" column
-
-1. **Find Column IDs:**
-   - Source board: `numbers_abc123`
-   - Destination board: `numbers_xyz789`
-
-2. **Update COLUMN_MAPPING:**
-   ```bash
-   # Add to existing mapping (one line)
-   COLUMN_MAPPING={"text_mkpvwvnv": "text1", "numbers_abc123": "numbers_xyz789"}
-   ```
-
-3. **Update COLUMN_NAMES (optional but recommended):**
-   ```bash
-   COLUMN_NAMES={
-     "text_mkpvwvnv": "Focus Keyword",
-     "text1": "Focus Keyword",
-     "numbers_abc123": "SEO Score",
-     "numbers_xyz789": "SEO Score"
-   }
-   ```
-
-4. **Test:**
-   - Run `run.bat`
-   - Check the preview table shows "SEO Score (Source) → SEO Score (Destination)"
-   - Verify the value transfers correctly
-
-## Finding Column IDs - Quick Methods
-
-### Method 1: Browser DevTools (Fastest)
-1. Open your Monday.com board
-2. Press `F12` to open DevTools
-3. Click the "Elements" tab
-4. Right-click column header → Inspect
-5. Look for `data-column-id="text_mkpvwvnv"`
-
-### Method 2: API Query
-```graphql
-{
-  boards(ids: [YOUR_BOARD_ID]) {
-    columns {
-      id
-      title
-      type
-    }
-  }
-}
-```
-Run this at: https://developer.monday.com/api-reference
-
-## Troubleshooting
-
-### Column not appearing in preview
-**Cause:** Source column is empty
-**Solution:** The tool skips empty columns automatically. Ensure source item has a value.
-
-### "missingLabel" error for status columns
-**Cause:** Label doesn't exist in destination column
-**Solution:** Ensure both boards have the same status label names (e.g., "Done", "Working on it")
-
-### "invalid value" for dropdown
-**Cause:** Dropdown IDs don't match between boards
-**Solution:** Use the same dropdown options in both boards, or manually adjust after transfer
-
-### Board relation not mapping
-**Cause:** Source column is empty
-**Solution:** Manually set board relations in source, or column will be skipped
+---
 
 ## Testing Changes
 
@@ -184,63 +114,5 @@ After modifying `.env`:
 5. **Type 'n' to cancel** if preview doesn't look right
 6. **Fix .env and try again**
 
-## Common JSON Mistakes
-
-❌ **Wrong - Missing quotes:**
-```bash
-COLUMN_MAPPING={text_abc: text_xyz}
-```
-
-✅ **Correct - Double quotes:**
-```bash
-COLUMN_MAPPING={"text_abc": "text_xyz"}
-```
-
-❌ **Wrong - Multiple lines:**
-```bash
-COLUMN_MAPPING={
-  "text_abc": "text_xyz"
-}
-```
-
-✅ **Correct - Single line:**
-```bash
-COLUMN_MAPPING={"text_abc": "text_xyz"}
-```
-
-❌ **Wrong - Trailing comma:**
-```bash
-COLUMN_MAPPING={"text_abc": "text_xyz",}
-```
-
-✅ **Correct - No trailing comma:**
-```bash
-COLUMN_MAPPING={"text_abc": "text_xyz"}
-```
-
-## Advanced: Board Relations
-
-Board relation columns copy the exact item IDs from source to destination.
-
-**Requirements:**
-- Both boards must connect to the SAME third board
-- Item IDs must exist in that connected board
-
-**Example:**
-```
-Source: board_relation_abc → connects to Board X
-Destination: connect_boards__1 → must also connect to Board X
-```
-
-If source has Item #123 linked, destination will link Item #123 (from Board X).
-
-## Need Help?
-
-- Check the main README.md for user documentation
-- Review the Column Type Reference section above
-- Test with one item at a time before batch processing
-- The preview table shows exactly what will be mapped - use it!
-
 ---
 
-**Pro Tip:** Always use the preview and confirmation feature. Type 'n' if anything looks wrong, fix your `.env`, and try again. The tool won't make changes until you confirm with 'y'.
