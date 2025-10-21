@@ -311,6 +311,22 @@ class MondayItemDuplicator:
                             mapped_values[dest_col_id] = {"item_ids": item_ids}
                             mapped_summary.append(f"✅ {mapping_display}: {len(item_ids)} linked item(s)")
 
+                    elif col["type"] == "color":
+                        # Status/color column - use label format
+                        # Monday.com expects {"label": "Label Name"}
+                        mapped_values[dest_col_id] = {"label": col["text"]}
+                        mapped_summary.append(f"✅ {mapping_display}: {col['text']}")
+
+                    elif col["type"] == "dropdown":
+                        # Dropdown column - use label format
+                        # Get the labels from the dropdown
+                        labels = value_data.get("labels", [])
+                        if labels:
+                            # Use the label IDs from source
+                            mapped_values[dest_col_id] = {"labels": labels}
+                            label_text = ", ".join([str(label) for label in labels])
+                            mapped_summary.append(f"✅ {mapping_display}: {label_text}")
+
                     else:
                         # For other types, try to use the raw value
                         mapped_values[dest_col_id] = value_data
