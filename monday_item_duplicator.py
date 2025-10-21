@@ -343,8 +343,16 @@ class MondayItemDuplicator:
                         mapped_summary.append(f"✅ {mapping_display}: {url}")
 
                     elif col["type"] == "board-relation":
-                        # Check if this is a pillar relation that needs intelligent matching
-                        if pillar_board_id and pillar_group_id and pillar_search_columns:
+                        # First, try to extract existing linked item IDs from source
+                        linked_items = value_data.get("linkedPulseIds", [])
+
+                        if linked_items:
+                            # Source has board relation values - copy them directly
+                            item_ids = [int(item["linkedPulseId"]) for item in linked_items]
+                            mapped_values[dest_col_id] = {"item_ids": item_ids}
+                            mapped_summary.append(f"✅ {mapping_display}: {len(item_ids)} linked item(s)")
+                        elif pillar_board_id and pillar_group_id and pillar_search_columns:
+                            # Source is empty - do intelligent matching
                             # Build search terms from specified columns
                             search_terms = []
                             for search_col_id in pillar_search_columns:
@@ -360,16 +368,9 @@ class MondayItemDuplicator:
 
                             if matching_ids:
                                 mapped_values[dest_col_id] = {"item_ids": matching_ids}
-                                mapped_summary.append(f"✅ {mapping_display}: {len(matching_ids)} matched pillar(s)")
+                                mapped_summary.append(f"✅ {mapping_display}: {len(matching_ids)} auto-matched pillar(s)")
                             else:
                                 print(f"   ⚠️  No matching pillars found for search terms: {search_terms}")
-                        else:
-                            # Extract linked item IDs directly (original behavior)
-                            linked_items = value_data.get("linkedPulseIds", [])
-                            if linked_items:
-                                item_ids = [int(item["linkedPulseId"]) for item in linked_items]
-                                mapped_values[dest_col_id] = {"item_ids": item_ids}
-                                mapped_summary.append(f"✅ {mapping_display}: {len(item_ids)} linked item(s)")
 
                     elif col["type"] == "color":
                         # Status/color column - use label format
