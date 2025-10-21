@@ -209,6 +209,94 @@ Processing Item 1/1
 ✅ Item created successfully! New Item ID: 67890
 ```
 
+## Column Type Reference
+
+Understanding how different Monday.com column types are mapped:
+
+### Supported Column Types
+
+| Column Type | Format | Example | Notes |
+|------------|--------|---------|-------|
+| **Text** | Plain text string | `"Column text here"` | Simple text fields |
+| **Link** | `{"url": "...", "text": "..."}` | `{"url": "https://example.com", "text": "https://example.com"}` | URL is used for both url and display text |
+| **Status/Color** | `{"label": "Label Name"}` | `{"label": "Done"}` | Uses the label text, not index |
+| **Dropdown** | `{"ids": [1, 2, 3]}` | `{"ids": [2]}` | Uses numeric IDs, not labels array |
+| **Board Relation** | `{"item_ids": [123, 456]}` | `{"item_ids": [789]}` | Links to items in other boards |
+
+### Common Column Mapping Issues
+
+#### Issue: "missingLabel" error for Status/Color columns
+**Problem:** The label doesn't exist in the destination column
+**Solution:** Ensure both source and destination status columns have the same label names (e.g., "Done", "Working on it", etc.)
+
+**Example:**
+```bash
+# ❌ Wrong - Using index format
+{"index": 2}
+
+# ✅ Correct - Using label format
+{"label": "Done"}
+```
+
+#### Issue: Dropdown values not transferring
+**Problem:** Using wrong key name in the data structure
+**Solution:** Dropdown columns use `"ids"` not `"labels"`
+
+**Example:**
+```bash
+# ❌ Wrong - Using labels key
+{"labels": [2]}
+
+# ✅ Correct - Using ids key
+{"ids": [2]}
+```
+
+#### Issue: Columns not appearing in preview table
+**Problem:** Source column is empty or null
+**Solution:** The script automatically skips empty columns. Ensure your source items have values in the columns you want to map.
+
+### How to Debug Column Mapping Issues
+
+1. **Check the column type:**
+   - Open Monday.com Developer Tools (F12)
+   - Inspect the column element
+   - Look for the `data-column-type` attribute
+
+2. **Find the correct column ID:**
+   ```bash
+   # In browser console, on the board page:
+   # Look for data-column-id attributes
+   ```
+
+3. **Test the API format:**
+   Use the Monday.com API explorer at https://developer.monday.com/api-reference to test column value formats
+
+4. **Check the error message:**
+   - `missingLabel`: Status column label doesn't exist in destination
+   - `ColumnValueException`: Wrong format for the column type
+   - `invalid value`: The value doesn't match the column's expected format
+
+### Finding Column IDs
+
+**Method 1: Browser Developer Tools**
+1. Open your Monday.com board
+2. Press F12 to open Developer Tools
+3. Right-click on a column header → Inspect
+4. Look for `data-column-id` in the HTML
+
+**Method 2: API Query**
+```graphql
+{
+  boards(ids: [YOUR_BOARD_ID]) {
+    columns {
+      id
+      title
+      type
+    }
+  }
+}
+```
+
 ## Troubleshooting
 
 ### "MONDAY_API_KEY is missing"
@@ -229,6 +317,7 @@ Processing Item 1/1
 - Verify your API key has the correct permissions
 - Check that Board IDs and Group IDs are correct
 - Ensure column IDs exist in both source and destination boards
+- See "Column Type Reference" above for column-specific formatting issues
 
 ## Security Notes
 
