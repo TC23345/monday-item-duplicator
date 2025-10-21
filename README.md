@@ -1,179 +1,60 @@
 # Monday.com Item Duplicator
 
-A Python tool to duplicate items between Monday.com boards with column mapping support and duplicate detection.
+Duplicate items between Monday.com boards with column mapping and automatic duplicate detection.
 
-## ✨ Features
+## Features
 
-- ✅ **Duplicate Detection** - Automatically detects existing items and updates them instead of creating duplicates
-- 🔄 **Batch Processing** - Process all items from a group or individual items
-- 🎯 **Column Mapping** - Map columns from source to destination boards with different column IDs
-- ⚡ **User Confirmation** - Preview changes before creating/updating items
-- 📊 **Detailed Logging** - Clear output showing what was mapped and the results
-- 🔒 **Secure Configuration** - All sensitive data stored in `.env` file
+- ✅ Duplicate Detection - Updates existing items instead of creating duplicates
+- 🔄 Batch Processing - Process all items or one at a time
+- 🎯 Column Mapping - Map columns between different boards
+- ⚡ User Confirmation - Preview before creating/updating
 
-## Supported Column Types
+## Quick Start (Windows)
 
-- Text columns
-- Link columns
-- Board relation columns
-- Status columns
-- Date columns
-- And more (the tool attempts to handle all column types)
+### 1. Clone the Repository
 
-## Prerequisites
+Open Command Prompt or Git Bash and run:
 
-- Python 3.7 or higher
-- Monday.com account with API access
-- API key from Monday.com
-
-## Installation
-
-### Windows
-
-1. Clone this repository:
 ```bash
-git clone https://github.com/yourusername/monday-item-duplicator.git
+git clone https://github.com/TC23345/monday-item-duplicator.git
 cd monday-item-duplicator
 ```
 
-2. Run the setup script:
-```bash
-setup.bat
-```
+### 2. Run Setup
+
+Right-click `setup.bat` → **Show in File Explorer** → Double-click `setup.bat`
 
 This will:
-- Create a Python virtual environment
-- Install required dependencies
-- Help you create a `.env` file
+- Create Python virtual environment
+- Install dependencies
+- Guide you through creating your `.env` configuration file
 
-### Linux/Mac
+### 3. Run the Tool
 
-1. Clone this repository:
-```bash
-git clone https://github.com/yourusername/monday-item-duplicator.git
-cd monday-item-duplicator
-```
+Right-click `run.bat` → **Show in File Explorer** → Double-click `run.bat`
 
-2. Create and activate a virtual environment:
-```bash
-python3 -m venv .venv
-source .venv/bin/activate  # On Mac/Linux
-```
+- Press **Enter** to process ALL items (batch mode)
+- Or type an item name to process just that one item
 
-3. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-4. Create your `.env` file (see Configuration below)
+That's it! 🎉
 
 ## Configuration
 
-### 1. Get Your Monday.com API Key
+The `setup.bat` script will guide you through configuration. You'll need:
 
-1. Go to your Monday.com account
-2. Click on your profile picture → Admin
-3. Navigate to **API** section
-4. Generate or copy your API token
+1. **Monday.com API Key**
+   - Go to Monday.com → Profile → Admin → API
+   - Copy your API token
 
-### 2. Configure the .env File
+2. **Board IDs** (found in the URL)
+   - Source: `https://yourcompany.monday.com/boards/SOURCE_BOARD_ID`
+   - Destination: `https://yourcompany.monday.com/boards/DEST_BOARD_ID`
 
-Copy `.env.example` to `.env`:
-```bash
-cp .env.example .env
-```
+3. **Group IDs** (press F12 on board, inspect group element for `data-id`)
 
-Edit `.env` with your configuration:
+4. **Column Mappings** (see Advanced Configuration below)
 
-```bash
-# Monday.com API Key
-MONDAY_API_KEY=your_actual_api_key_here
-
-# Source Board (where items are copied FROM)
-SOURCE_BOARD_ID=1234567890
-SOURCE_GROUP_ID=group_abc123
-SOURCE_BOARD_NAME=Content Creation Machine
-
-# Destination Board (where items are copied TO)
-DEST_BOARD_ID=0987654321
-DEST_GROUP_ID=group_xyz789
-DEST_BOARD_NAME=Workshop Board
-
-# Column Mapping (JSON format)
-COLUMN_MAPPING={"text_source": "text_dest", "link_source": "link_dest"}
-```
-
-### 3. Finding Board and Group IDs
-
-**Board ID:**
-- Open your board in Monday.com
-- Look at the URL: `https://yourcompany.monday.com/boards/1234567890`
-- The number at the end is your Board ID
-
-**Group ID:**
-- Open your browser's Developer Tools (F12)
-- Inspect a group title element
-- Look for `data-id` attribute (e.g., `group_abc123`)
-
-**Column IDs:**
-- Use Monday.com's API explorer: https://api.developer.monday.com/docs
-- Or inspect column elements in Developer Tools
-
-### 4. Column Mapping Format
-
-The `COLUMN_MAPPING` must be valid JSON on a single line:
-
-```json
-{"source_column_id": "destination_column_id", "another_source": "another_dest"}
-```
-
-Example:
-```bash
-COLUMN_MAPPING={"text_mkpvwvnv": "text1", "link_mkpv2ga7": "link0", "board_relation_mkrcq1m6": "connect_boards__1"}
-```
-
-## Usage
-
-### Batch Mode (Process All Items)
-
-Process all items from the source group:
-
-**Windows:**
-```bash
-run.bat
-```
-
-**Linux/Mac:**
-```bash
-source .venv/bin/activate
-python monday_item_duplicator.py
-```
-
-### Single Item Mode
-
-Process a specific item by name:
-
-**Windows:**
-```bash
-run.bat "Item Name Here"
-```
-
-**Linux/Mac:**
-```bash
-source .venv/bin/activate
-python monday_item_duplicator.py "Item Name Here"
-```
-
-## How It Works
-
-1. **Fetches Items** - Gets items from the source board/group
-2. **Checks for Duplicates** - Searches destination board for items with the same name
-3. **Shows Preview** - Displays what columns will be mapped
-4. **User Confirmation** - Asks "Continue with create/update? (y/n)"
-5. **Creates or Updates** - If confirmed:
-   - Creates new item if it doesn't exist
-   - Updates existing item if it already exists
-6. **Displays Summary** - Shows what was created/updated
+Setup creates a `.env` file with all these settings.
 
 ## Example Output
 
@@ -299,50 +180,64 @@ Understanding how different Monday.com column types are mapped:
 
 ## Troubleshooting
 
-### "MONDAY_API_KEY is missing"
-- Make sure you created a `.env` file
-- Check that `MONDAY_API_KEY` is set in `.env`
-- Ensure there are no quotes around the API key value
+| Issue | Solution |
+|-------|----------|
+| "MONDAY_API_KEY is missing" | Run `setup.bat` again to create `.env` file |
+| "Item not found" | Check item name spelling (case-sensitive) |
+| GraphQL errors | Verify Board IDs, Group IDs, and API key permissions |
+| Column not mapping | See Advanced Configuration → Column Type Reference |
 
-### "COLUMN_MAPPING is not valid JSON"
-- Ensure the mapping is on a single line
-- Use double quotes `"` not single quotes `'`
-- Escape any special characters if needed
+## Advanced Configuration
 
-### "Item not found"
-- Verify the item name is spelled exactly as it appears in Monday.com
-- Check that you're looking in the correct board and group
+<details>
+<summary>Click to expand advanced topics</summary>
 
-### GraphQL Errors
-- Verify your API key has the correct permissions
-- Check that Board IDs and Group IDs are correct
-- Ensure column IDs exist in both source and destination boards
-- See "Column Type Reference" above for column-specific formatting issues
+### Finding Board and Group IDs
 
-## Security Notes
+**Board ID:**
+- Open your board in Monday.com
+- Look at the URL: `https://yourcompany.monday.com/boards/1234567890`
+- The number is your Board ID
 
-- ⚠️ **Never commit your `.env` file** - It contains your API key
-- The `.gitignore` file is configured to exclude `.env` automatically
-- Share `.env.example` with others, not `.env`
+**Group ID:**
+- Press F12 on the board
+- Inspect a group title element
+- Look for `data-id` attribute (e.g., `group_abc123`)
 
-## Contributing
+**Column IDs:**
+- Use Developer Tools (F12) and inspect column headers
+- Or use Monday.com API explorer: https://developer.monday.com/api-reference
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+### Column Mapping Format
 
-## License
+Edit `.env` file manually. `COLUMN_MAPPING` must be valid JSON on one line:
 
-MIT License - feel free to use this tool for your projects!
+```bash
+COLUMN_MAPPING={"source_col_id": "dest_col_id", "another_source": "another_dest"}
+```
 
-## Support
+Example:
+```bash
+COLUMN_MAPPING={"text_mkpvwvnv": "text1", "link_mkpv2ga7": "link0"}
+```
 
-If you encounter any issues or have questions:
-1. Check the Troubleshooting section
-2. Review your `.env` configuration
-3. Open an issue on GitHub
+### Supported Column Types
 
-## Author
+| Type | Format | Example |
+|------|--------|---------|
+| Text | `"text"` | `"Hello"` |
+| Link | `{"url": "...", "text": "..."}` | `{"url": "https://example.com"}` |
+| Status/Color | `{"label": "Label"}` | `{"label": "Done"}` |
+| Dropdown | `{"ids": [1, 2]}` | `{"ids": [2]}` |
+| Board Relation | `{"item_ids": [123]}` | `{"item_ids": [789]}` |
 
-Created to help teams automate Monday.com board management.
+</details>
+
+---
+
+## Security Note
+
+⚠️ **Never commit your `.env` file** - it contains your API key!
 
 ---
 
