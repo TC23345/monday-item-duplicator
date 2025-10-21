@@ -318,14 +318,13 @@ class MondayItemDuplicator:
                         mapped_summary.append(f"✅ {mapping_display}: {col['text']}")
 
                     elif col["type"] == "dropdown":
-                        # Dropdown column - use label format
-                        # Get the labels from the dropdown
-                        labels = value_data.get("labels", [])
-                        if labels:
-                            # Use the label IDs from source
-                            mapped_values[dest_col_id] = {"labels": labels}
-                            label_text = ", ".join([str(label) for label in labels])
-                            mapped_summary.append(f"✅ {mapping_display}: {label_text}")
+                        # Dropdown column - use ids format
+                        # Dropdown values come as {"ids": [1, 2, 3]}
+                        ids = value_data.get("ids", [])
+                        if ids:
+                            # Use the IDs from source
+                            mapped_values[dest_col_id] = {"ids": ids}
+                            mapped_summary.append(f"✅ {mapping_display}: {col['text']}")
 
                     else:
                         # For other types, try to use the raw value
