@@ -56,39 +56,7 @@ The `setup.bat` script will guide you through configuration. You'll need:
 
 Setup creates a `.env` file with all these settings.
 
-## Example Output
-
-```
-================================================================================
-Processing Item 1/1
-================================================================================
-
-🔍 Processing item: 'My Article' (ID: 12345)
-   From group: Ready to Upload
-
-🔎 Checking for existing item in destination board...
-✅ No duplicate found - will create new item
-
-======================================================================
-📋 PREVIEW - Ready to CREATE
-======================================================================
-
-✅ Will Map (5 columns):
-  • Name: 'My Article'
-  • ✅ text_mkpvwvnv → text1: 'keyword example'
-  • ✅ text_mkpv7fek → text_mks07meq: 'Article Title'
-  • ✅ link_mkpv2ga7 → link0: https://example.com
-  • ✅ text_mkpvv0ws → text_mkwym6gf: '12345'
-  • ✅ board_relation_mkrcq1m6 → connect_boards__1: 2 linked item(s)
-
-======================================================================
-
-⚠️  Ready to CREATE this item in the destination board.
-   Continue with create? (y/n): y
-
-📊 Creating new item in board 0987654321, group group_xyz789...
-✅ Item created successfully! New Item ID: 67890
-```
+---
 
 ## Column Type Reference
 
@@ -119,7 +87,10 @@ Understanding how different Monday.com column types are mapped:
 {"label": "Done"}
 ```
 
+---
+
 #### Issue: Dropdown values not transferring
+
 **Problem:** Using wrong key name in the data structure
 **Solution:** Dropdown columns use `"ids"` not `"labels"`
 
@@ -132,113 +103,18 @@ Understanding how different Monday.com column types are mapped:
 {"ids": [2]}
 ```
 
-#### Issue: Columns not appearing in preview table
-**Problem:** Source column is empty or null
-**Solution:** The script automatically skips empty columns. Ensure your source items have values in the columns you want to map.
-
 ### How to Debug Column Mapping Issues
+1. **Test the API format:**
+   - Use the Monday.com API explorer at https://developer.monday.com/api-reference
 
-1. **Check the column type:**
-   - Open Monday.com Developer Tools (F12)
-   - Inspect the column element
-   - Look for the `data-column-type` attribute
-
-2. **Find the correct column ID:**
-   ```bash
-   # In browser console, on the board page:
-   # Look for data-column-id attributes
-   ```
-
-3. **Test the API format:**
-   Use the Monday.com API explorer at https://developer.monday.com/api-reference to test column value formats
-
-4. **Check the error message:**
+2. **Check the error message:**
    - `missingLabel`: Status column label doesn't exist in destination
    - `ColumnValueException`: Wrong format for the column type
    - `invalid value`: The value doesn't match the column's expected format
 
-### Finding Column IDs
+3. **Check the column type:**
+   - Use the Monday.com API explorer at https://developer.monday.com/api-reference/reference/column-types-reference
 
-**Method 1: Browser Developer Tools**
-1. Open your Monday.com board
-2. Press F12 to open Developer Tools
-3. Right-click on a column header → Inspect
-4. Look for `data-column-id` in the HTML
-
-**Method 2: API Query**
-```graphql
-{
-  boards(ids: [YOUR_BOARD_ID]) {
-    columns {
-      id
-      title
-      type
-    }
-  }
-}
-```
-
-## Troubleshooting
-
-| Issue | Solution |
-|-------|----------|
-| "MONDAY_API_KEY is missing" | Run `setup.bat` again to create `.env` file |
-| "Item not found" | Check item name spelling (case-sensitive) |
-| GraphQL errors | Verify Board IDs, Group IDs, and API key permissions |
-| Column not mapping | See Advanced Configuration → Column Type Reference |
-
-## Advanced Configuration
-
-<details>
-<summary>Click to expand advanced topics</summary>
-
-### Finding Board and Group IDs
-
-**Board ID:**
-- Open your board in Monday.com
-- Look at the URL: `https://yourcompany.monday.com/boards/1234567890`
-- The number is your Board ID
-
-**Group ID:**
-- Press F12 on the board
-- Inspect a group title element
-- Look for `data-id` attribute (e.g., `group_abc123`)
-
-**Column IDs:**
-- Use Developer Tools (F12) and inspect column headers
-- Or use Monday.com API explorer: https://developer.monday.com/api-reference
-
-### Column Mapping Format
-
-Edit `.env` file manually. `COLUMN_MAPPING` must be valid JSON on one line:
-
-```bash
-COLUMN_MAPPING={"source_col_id": "dest_col_id", "another_source": "another_dest"}
-```
-
-Example:
-```bash
-COLUMN_MAPPING={"text_mkpvwvnv": "text1", "link_mkpv2ga7": "link0"}
-```
-
-### Supported Column Types
-
-| Type | Format | Example |
-|------|--------|---------|
-| Text | `"text"` | `"Hello"` |
-| Link | `{"url": "...", "text": "..."}` | `{"url": "https://example.com"}` |
-| Status/Color | `{"label": "Label"}` | `{"label": "Done"}` |
-| Dropdown | `{"ids": [1, 2]}` | `{"ids": [2]}` |
-| Board Relation | `{"item_ids": [123]}` | `{"item_ids": [789]}` |
-
-</details>
 
 ---
 
-## Security Note
-
-⚠️ **Never commit your `.env` file** - it contains your API key!
-
----
-
-**Made with ❤️ for the Monday.com community**  

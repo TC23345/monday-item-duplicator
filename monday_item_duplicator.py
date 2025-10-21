@@ -104,16 +104,52 @@ class MondayItemDuplicator:
             }
         }
         """
-        
+
         variables = {"boardId": str(board_id)}
         data = self.execute_query(query, variables)
-        
+
         all_items = data["boards"][0]["items_page"]["items"]
-        
+
         # Filter items by group_id
         group_items = [item for item in all_items if item["group"]["id"] == group_id]
-        
+
         return group_items
+
+    def find_matching_pillar_items(self, search_terms: List[str], pillar_board_id: int, pillar_group_id: str) -> List[int]:
+        """
+        Find matching items in the Client Pillars board by searching item names
+
+        Args:
+            search_terms: List of terms to search for (e.g., focus keyword, page title)
+            pillar_board_id: Board ID of the Client Pillars board
+            pillar_group_id: Group ID within the Client Pillars board to search
+
+        Returns:
+            List of matching item IDs
+        """
+        # Get all items from the pillars board
+        pillar_items = self.get_items_from_group(pillar_board_id, pillar_group_id)
+
+        matching_ids = []
+
+        # Search for matches in item names
+        for search_term in search_terms:
+            if not search_term:
+                continue
+
+            search_term_lower = search_term.lower().strip()
+
+            for item in pillar_items:
+                item_name_lower = item["name"].lower().strip()
+
+                # Check if search term matches the item name (case-insensitive, partial match)
+                if search_term_lower in item_name_lower or item_name_lower in search_term_lower:
+                    item_id = int(item["id"])
+                    if item_id not in matching_ids:
+                        matching_ids.append(item_id)
+                        print(f"   ✅ Found matching pillar: '{item['name']}' (ID: {item_id}) for search term '{search_term}'")
+
+        return matching_ids
     
     def create_item_with_values(
         self,
@@ -226,7 +262,10 @@ class MondayItemDuplicator:
         column_mapping: Dict[str, str],
         column_names: Dict[str, str] = None,
         source_board_name: str = "Source",
-        dest_board_name: str = "Destination"
+        dest_board_name: str = "Destination",
+        pillar_board_id: int = None,
+        pillar_group_id: str = None,
+        pillar_search_columns: List[str] = None
     ) -> Dict:
         """
         Duplicate an item using existing item data
@@ -304,12 +343,33 @@ class MondayItemDuplicator:
                         mapped_summary.append(f"✅ {mapping_display}: {url}")
 
                     elif col["type"] == "board-relation":
-                        # Extract linked item IDs
-                        linked_items = value_data.get("linkedPulseIds", [])
-                        if linked_items:
-                            item_ids = [int(item["linkedPulseId"]) for item in linked_items]
-                            mapped_values[dest_col_id] = {"item_ids": item_ids}
-                            mapped_summary.append(f"✅ {mapping_display}: {len(item_ids)} linked item(s)")
+                        # Check if this is a pillar relation that needs intelligent matching
+                        if pillar_board_id and pillar_group_id and pillar_search_columns:
+                            # Build search terms from specified columns
+                            search_terms = []
+                            for search_col_id in pillar_search_columns:
+                                if search_col_id in source_columns:
+                                    search_text = source_columns[search_col_id].get("text", "")
+                                    if search_text:
+                                        search_terms.append(search_text)
+
+                            # Find matching items in the pillar board
+                            print(f"\n   🔍 Searching for matching Client Pillars...")
+                            print(f"   Search terms: {search_terms}")
+                            matching_ids = self.find_matching_pillar_items(search_terms, pillar_board_id, pillar_group_id)
+
+                            if matching_ids:
+                                mapped_values[dest_col_id] = {"item_ids": matching_ids}
+                                mapped_summary.append(f"✅ {mapping_display}: {len(matching_ids)} matched pillar(s)")
+                            else:
+                                print(f"   ⚠️  No matching pillars found for search terms: {search_terms}")
+                        else:
+                            # Extract linked item IDs directly (original behavior)
+                            linked_items = value_data.get("linkedPulseIds", [])
+                            if linked_items:
+                                item_ids = [int(item["linkedPulseId"]) for item in linked_items]
+                                mapped_values[dest_col_id] = {"item_ids": item_ids}
+                                mapped_summary.append(f"✅ {mapping_display}: {len(item_ids)} linked item(s)")
 
                     elif col["type"] == "color":
                         # Status/color column - use label format
@@ -519,7 +579,19 @@ def main():
         COLUMN_NAMES = json.loads(column_names_str) if column_names_str else {}
     except json.JSONDecodeError:
         COLUMN_NAMES = {}
-    
+
+    # ============================================================================
+    # Client Pillars Auto-Matching Configuration (Optional)
+    # ============================================================================
+    PILLAR_BOARD_ID = int(os.getenv("PILLAR_BOARD_ID", "0")) or None
+    PILLAR_GROUP_ID = os.getenv("PILLAR_GROUP_ID", "") or None
+
+    pillar_search_columns_str = os.getenv("PILLAR_SEARCH_COLUMNS", "[]")
+    try:
+        PILLAR_SEARCH_COLUMNS = json.loads(pillar_search_columns_str) if pillar_search_columns_str else []
+    except json.JSONDecodeError:
+        PILLAR_SEARCH_COLUMNS = []
+
     # ============================================================================
     # Validate Configuration
     # ============================================================================
@@ -623,7 +695,10 @@ def main():
                         column_mapping=COLUMN_MAPPING,
                         column_names=COLUMN_NAMES,
                         source_board_name=SOURCE_BOARD_NAME,
-                        dest_board_name=DEST_BOARD_NAME
+                        dest_board_name=DEST_BOARD_NAME,
+                        pillar_board_id=PILLAR_BOARD_ID,
+                        pillar_group_id=PILLAR_GROUP_ID,
+                        pillar_search_columns=PILLAR_SEARCH_COLUMNS
                     )
                     results.append(result)
 
