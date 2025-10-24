@@ -1,0 +1,101 @@
+{
+  "_comment": "Monday.com Item Duplicator - Workflow Configuration Template",
+  "_description": "This template shows how to configure workflows. Copy to workflows.json and customize.",
+
+  "templates": {
+    "standard_seo": {
+      "description": "Standard SEO workflow - core content elements for all clients",
+      "column_mappings": [
+        {
+          "source": "SOURCE_COLUMN_ID",
+          "dest": "DEST_COLUMN_ID",
+          "name": "Display Name",
+          "type": "text|link|board_relation|dropdown|color|status"
+        }
+      ]
+    },
+
+    "custom_template_example": {
+      "description": "Custom template for specific use cases",
+      "column_mappings": [
+        {
+          "source": "custom_source_col",
+          "dest": "custom_dest_col",
+          "name": "Custom Field",
+          "type": "text"
+        }
+      ]
+    }
+  },
+
+  "workflows": [
+    {
+      "id": "unique_workflow_id",
+      "name": "Workflow Display Name",
+      "enabled": true,
+      "source": {
+        "board_id": 1234567890,
+        "group_id": "group_id_here",
+        "board_name": "Source Board Name"
+      },
+      "destinations": [
+        {
+          "board_id": 9876543210,
+          "group_id": "group_id_here",
+          "board_name": "Destination Board Name",
+          "template": "standard_seo",
+          "overrides": {
+            "_comment": "Override specific column mappings from template",
+            "source_col_id": "different_dest_col_id"
+          },
+          "additional_mappings": [
+            {
+              "_comment": "Add extra columns not in template",
+              "source": "extra_source_col",
+              "dest": "extra_dest_col",
+              "name": "Extra Field",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "_example": "Multi-destination workflow",
+      "id": "multi_dest",
+      "name": "Content → Multiple Clients",
+      "enabled": false,
+      "source": {
+        "board_id": 1234567890,
+        "group_id": "group_abc"
+      },
+      "destinations": [
+        {
+          "board_id": 1111111111,
+          "group_id": "group_xyz",
+          "board_name": "Client A",
+          "template": "standard_seo"
+        },
+        {
+          "board_id": 2222222222,
+          "group_id": "group_xyz",
+          "board_name": "Client B",
+          "template": "standard_seo",
+          "overrides": {
+            "text_mkpv7fek": "text5"
+          }
+        }
+      ]
+    }
+  ],
+
+  "_notes": [
+    "1. Column Types: text, link, board_relation, dropdown, color, status",
+    "2. Overrides replace template mappings for specific columns",
+    "3. Additional mappings add new columns not in the template",
+    "4. Multi-destination workflows copy one item to multiple boards",
+    "5. Set enabled: false to temporarily disable a workflow",
+    "6. Use templates to reuse common column mappings across workflows"
+  ]
+}

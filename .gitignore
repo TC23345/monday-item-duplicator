@@ -9,6 +9,12 @@ env/
 .env.local
 .env.*.local
 
+# Workflow configurations (contains sensitive board IDs and mappings)
+config/workflows.json
+
+# Windows batch scripts (environment-specific)
+*.bat
+
 # Python
 __pycache__/
 *.py[cod]
